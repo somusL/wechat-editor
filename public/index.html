@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微编 - 公众号排版神器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✍️</text></svg>">
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<style>
+:root{--p:#07c160;--pd:#06ad56;--pl:#e8f8ee;--a:#fa5151;--bg:#f5f6fa;--t:#1a1a2e;--t2:#6b7280;--bd:#e5e7eb;--sh:0 2px 12px rgba(0,0,0,0.08);--sl:0 8px 30px rgba(0,0,0,0.12);--r:12px;--tr:all .3s cubic-bezier(.4,0,.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}a{text-decoration:none;color:inherit}button{cursor:pointer;border:none;font-family:inherit}input,textarea,select{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:3px}
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 30px}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:800;color:var(--p)}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--t2);transition:var(--tr);cursor:pointer}
+.nav-link:hover,.nav-link.active{background:var(--pl);color:var(--p)}
+.nav-actions{display:flex;gap:10px;align-items:center}
+.btn{padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;transition:var(--tr);display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--p);color:#fff}.btn-p:hover{background:var(--pd);transform:translateY(-1px);box-shadow:0 4px 15px rgba(7,193,96,0.3)}
+.btn-o{background:transparent;border:1.5px solid var(--p);color:var(--p)}.btn-o:hover{background:var(--pl)}
+.btn-g{background:transparent;color:var(--t2)}.btn-g:hover{background:#f3f4f6}
+.btn-d{background:#fee2e2;color:#dc2626}.btn-d:hover{background:#fecaca}
+.btn-sm{padding:5px 12px;font-size:12px}.btn-lg{padding:12px 30px;font-size:16px}
+.uav{width:36px;height:36px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;cursor:pointer;position:relative}
+.um{position:absolute;top:50px;right:0;background:#fff;border-radius:12px;box-shadow:var(--sl);padding:8px;min-width:180px;display:none;border:1px solid var(--bd)}
+.um.show{display:block}
+.umi{display:flex;align-items:center;gap:10px;padding:10px 15px;border-radius:8px;font-size:14px;cursor:pointer;transition:var(--tr)}
+.umi:hover{background:#f3f4f6}
+.umi i{width:18px;text-align:center;color:var(--t2)}
+.mc{margin-top:64px;min-height:calc(100vh - 64px)}
+.page{display:none;animation:fi .4s ease}.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.hero{text-align:center;padding:80px 20px 60px;background:linear-gradient(135deg,#e8f8ee 0%,#f0f4ff 50%,#fef3f2 100%);position:relative;overflow:hidden}
+.hero h1{font-size:48px;font-weight:900;margin-bottom:20px;line-height:1.3}.hero h1 span{color:var(--p)}
+.hero p{font-size:18px;color:var(--t2);max-width:600px;margin:0 auto 35px;line-height:1.8}
+.ha{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}
+.hs{display:flex;gap:60px;justify-content:center;margin-top:60px}
+.hs .n{font-size:36px;font-weight:800;color:var(--p)}.hs .l{font-size:14px;color:var(--t2);margin-top:5px}
+.feat{padding:80px 30px;max-width:1200px;margin:0 auto}
+.feat>h2{text-align:center;font-size:32px;margin-bottom:15px}
+.feat>p{text-align:center;color:var(--t2);margin-bottom:50px}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:25px}
+.fc{background:#fff;border-radius:var(--r);padding:30px;border:1px solid var(--bd);transition:var(--tr)}
+.fc:hover{transform:translateY(-5px);box-shadow:var(--sl);border-color:var(--p)}
+.fi{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+.fc h3{font-size:18px;margin-bottom:10px}.fc p{font-size:14px;color:var(--t2);line-height:1.7}
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mo.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:40px;width:90%;max-width:440px;position:relative;animation:mi .3s ease;max-height:90vh;overflow-y:auto}
+@keyframes mi{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.mx{position:absolute;top:15px;right:15px;width:32px;height:32px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#666;font-size:14px}
+.modal h2{font-size:24px;margin-bottom:8px}.modal .sub{color:var(--t2);font-size:14px;margin-bottom:25px}
+.fg2{margin-bottom:18px}.fg2 label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--t2)}
+.fi2{width:100%;padding:10px 14px;border:1.5px solid var(--bd);border-radius:8px;font-size:14px;transition:var(--tr);background:#fafafa}
+.fi2:focus{border-color:var(--p);background:#fff;box-shadow:0 0 0 3px rgba(7,193,96,0.1)}
+textarea.fi2{resize:vertical;min-height:80px}
+.fb{width:100%;padding:12px;background:var(--p);color:#fff;border-radius:8px;font-size:15px;font-weight:600;transition:var(--tr);margin-top:8px}
+.fb:hover{background:var(--pd)}
+.ff{text-align:center;margin-top:15px;font-size:13px;color:var(--t2)}
+.ff a{color:var(--p);font-weight:600;cursor:pointer}
+.em{color:var(--a);font-size:13px;margin-top:8px;display:none}
+.ep{display:flex;height:calc(100vh - 64px)}
+.es{width:280px;background:#fff;border-right:1px solid var(--bd);overflow-y:auto;padding:20px;flex-shrink:0}
+.es h3{font-size:15px;margin-bottom:15px;color:var(--t2)}
+.tm{background:#f9fafb;border:2px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:var(--tr)}
+.tm:hover{border-color:var(--p);background:var(--pl)}
+.tm.sel{border-color:var(--p);background:var(--pl)}
+.tm h4{font-size:14px;margin-bottom:4px}.tm p{font-size:11px;color:var(--t2)}
+.emn{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ett{background:#fff;border-bottom:1px solid var(--bd);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ea{flex:1;display:flex;overflow:hidden}
+.el{flex:1;overflow-y:auto;padding:20px;background:#f9fafb}
+.er{width:375px;background:#fff;border-left:1px solid var(--bd);overflow-y:auto;flex-shrink:0}
+.ec{background:#fff;border-radius:10px;border:1px solid var(--bd);min-height:500px}
+#quill-editor{min-height:450px;font-size:15px;line-height:1.8}
+.ql-toolbar.ql-snow{border-radius:10px 10px 0 0;border-color:var(--bd);background:#fafafa}
+.ql-container.ql-snow{border-radius:0 0 10px 10px;border-color:var(--bd)}
+.ph{padding:15px 20px;border-bottom:1px solid var(--bd);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.pc{padding:20px;overflow-wrap:break-word;word-break:break-all}
+.mp{max-width:1200px;margin:0 auto;padding:30px}
+.mh{margin-bottom:30px}.mh h1{font-size:28px;margin-bottom:10px}.mh p{color:var(--t2)}
+.fb2{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap;align-items:center}
+.ft{padding:6px 16px;border-radius:20px;font-size:13px;background:#f3f4f6;color:var(--t2);cursor:pointer;transition:var(--tr);border:none}
+.ft.act,.ft:hover{background:var(--p);color:#fff}
+.sb{display:flex;align-items:center;background:#f3f4f6;border-radius:8px;padding:0 12px;margin-left:auto;border:1.5px solid transparent;transition:var(--tr)}
+.sb:focus-within{border-color:var(--p);background:#fff}
+.sb input{background:transparent;border:none;padding:8px;font-size:14px;width:200px}
+.sb i{color:var(--t2)}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.tc{background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);transition:var(--tr)}
+.tc:hover{transform:translateY(-3px);box-shadow:var(--sl)}
+.tpi{height:200px;overflow:hidden;position:relative;background:#f9fafb;display:flex;align-items:flex-start;justify-content:center}
+.tpi .pin{transform:scale(0.5);transform-origin:top center;width:200%;pointer-events:none}
+.tinf{padding:18px}.tinf h3{font-size:16px;margin-bottom:6px}
+.tinf .desc{font-size:13px;color:var(--t2);margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tmet{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--t2)}
+.ta{display:flex;align-items:center;gap:6px;cursor:pointer}
+.taa{width:22px;height:22px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px}
+.ts{display:flex;gap:12px}.ts span{display:flex;align-items:center;gap:4px}
+.tcat{display:inline-block;background:var(--pl);color:var(--p);padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600;margin-bottom:8px}
+.tabs{display:flex;gap:5px;margin-bottom:20px;border-bottom:1px solid var(--bd)}
+.tabtn{padding:10px 20px;font-size:14px;font-weight:500;background:transparent;color:var(--t2);border-bottom:2px solid transparent;transition:var(--tr);cursor:pointer}
+.tabtn.act{color:var(--p);border-bottom-color:var(--p)}
+.dash{max-width:1200px;margin:0 auto;padding:30px}
+.sgr{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:30px}
+.sc{background:#fff;border-radius:var(--r);padding:22px;border:1px solid var(--bd)}
+.sc .si{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.sc .sv{font-size:28px;font-weight:800;margin-bottom:4px}
+.sc .slb{font-size:13px;color:var(--t2)}
+.pp{max-width:800px;margin:0 auto;padding:30px}
+.pph{background:#fff;border-radius:var(--r);padding:35px;text-align:center;border:1px solid var(--bd);margin-bottom:25px}
+.pav{width:80px;height:80px;border-radius:50%;background:var(--p);color:#fff;font-size:32px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 15px}
+.pph h2{font-size:22px;margin-bottom:5px}
+.pph .bio{color:var(--t2);font-size:14px;margin-bottom:15px}
+.pst{display:flex;gap:30px;justify-content:center}
+.psi{text-align:center}.psi .num{font-size:20px;font-weight:700;color:var(--p)}.psi .lbl{font-size:12px;color:var(--t2)}
+.am{max-width:900px;margin:0 auto;padding:30px}
+.au{background:linear-gradient(135deg,#f9fafb,#e8f8ee);border:2px dashed var(--p);border-radius:var(--r);padding:50px;text-align:center;margin-bottom:25px}
+.au i{font-size:48px;color:var(--p);margin-bottom:15px}
+.pb{width:100%;max-width:400px;height:12px;background:#e5e7eb;border-radius:6px;margin:20px auto;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--p),#34d399);border-radius:6px;transition:width .5s}
+.tc2{position:fixed;top:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{background:#fff;border-radius:10px;padding:14px 20px;box-shadow:var(--sl);display:flex;align-items:center;gap:10px;font-size:14px;animation:ti .3s ease;border-left:4px solid var(--p);min-width:260px}
+.toast.err{border-left-color:var(--a)}.toast.err i{color:var(--a)}
+.toast i{color:var(--p);font-size:18px}
+@keyframes ti{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+.ls{display:flex;align-items:center;justify-content:center;padding:40px}
+.sp{width:36px;height:36px;border:3px solid var(--bd);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ey{text-align:center;padding:60px 20px;color:var(--t2)}.ey i{font-size:48px;margin-bottom:15px;opacity:.3}.ey h3{margin-bottom:8px;color:var(--t)}
+@media(max-width:768px){.navbar{padding:0 15px}.nav-links{display:none}.hero h1{font-size:28px}.hs{gap:25px}.hs .n{font-size:24px}.ep{flex-direction:column}.es{width:100%;max-height:200px}.ea{flex-direction:column}.er{width:100%}.fg{grid-template-columns:1fr}.tg{grid-template-columns:1fr}.sgr{grid-template-columns:repeat(2,1fr)}.sb{margin-left:0;width:100%}.sb input{width:100%}}
+.mmb{display:none;background:none;font-size:22px;color:var(--t);padding:5px}
+@media(max-width:768px){.mmb{display:block}}
+</style>
+</head>
+<body>
+<nav class="navbar">
+<a class="nav-logo" href="#" onclick="nav('home')"><i class="fas fa-pen-fancy"></i> 微编</a>
+<div class="nav-links" id="navLinks">
+<a class="nav-link active" onclick="nav('home')" data-p="home"><i class="fas fa-home"></i> 首页</a>
+<a class="nav-link" onclick="nav('editor')" data-p="editor"><i class="fas fa-edit"></i> 编辑器</a>
+<a class="nav-link" onclick="nav('market')" data-p="market"><i class="fas fa-store"></i> 模板市场</a>
+<a class="nav-link ao" onclick="nav('dash')" data-p="dash"><i class="fas fa-chart-bar"></i> 工作台</a>
+<a class="nav-link ao" onclick="nav('ads')" data-p="ads"><i class="fas fa-ad"></i> 广告</a>
+</div>
+<div class="nav-actions">
+<button class="mmb" onclick="tMM()"><i class="fas fa-bars"></i></button>
+<div id="aBtn"><button class="btn btn-g" onclick="sM('lM')">登录</button><button class="btn btn-p" onclick="sM('rM')">免费注册</button></div>
+<div id="uNav" style="display:none">
+<div class="uav" onclick="tUM()"><span id="uI">U</span></div>
+<div class="um" id="uMenu">
+<div class="umi" onclick="nav('dash')"><i class="fas fa-tachometer-alt"></i> 工作台</div>
+<div class="umi" onclick="nav('mytpl')"><i class="fas fa-palette"></i> 我的模板</div>
+<div class="umi" onclick="nav('prof')"><i class="fas fa-user"></i> 个人资料</div>
+<div class="umi" onclick="nav('ads')"><i class="fas fa-ad"></i> 广告管理</div>
+<hr style="margin:5px 0;border:none;border-top:1px solid var(--bd)">
+<div class="umi" onclick="doLogout()" style="color:var(--a)"><i class="fas fa-sign-out-alt"></i> 退出登录</div>
+</div>
+</div>
+</div>
+</nav>
+<div class="tc2" id="tC"></div>
+<div class="mc">
+<div class="page active" id="pg-home">
+<div class="hero">
+<h1>让公众号排版<br><span>变得简单又好看</span></h1>
+<p>海量精美模板，强大编辑功能，一键生成专业排版。创建你的模板分享给全网用户，积累粉丝，开通广告变现。</p>
+<div class="ha">
+<button class="btn btn-p btn-lg" onclick="nav('editor')"><i class="fas fa-rocket"></i> 立即开始编辑</button>
+<button class="btn btn-o btn-lg" onclick="nav('market')"><i class="fas fa-store"></i> 浏览模板市场</button>
+</div>
+<div class="hs">
+<div><div class="n">10,000+</div><div class="l">注册用户</div></div>
+<div><div class="n">500+</div><div class="l">精美模板</div></div>
+<div><div class="n">100,000+</div><div class="l">已排版文章</div></div>
+</div>
+</div>
+<div class="feat">
+<h2>为什么选择微编？</h2>
+<p>专业的公众号排版工具，满足你的所有需求</p>
+<div class="fg">
+<div class="fc"><div class="fi" style="background:#e8f8ee;color:#07c160"><i class="fas fa-magic"></i></div><h3>海量精美模板</h3><p>内置多种潮流模板，涵盖简约、科技、文艺、商务等风格。</p></div>
+<div class="fc"><div class="fi" style="background:#fef3f2;color:#fa5151"><i class="fas fa-palette"></i></div><h3>可视化编辑</h3><p>所见即所得编辑器，支持富文本编辑、图片上传。</p></div>
+<div class="fc"><div class="fi" style="background:#f0f4ff;color:#4f46e5"><i class="fas fa-cloud-upload-alt"></i></div><h3>发布与分享</h3><p>创建模板发布到市场，供其他用户使用。</p></div>
+<div class="fc"><div class="fi" style="background:#fff7ed;color:#f59e0b"><i class="fas fa-coins"></i></div><h3>广告变现</h3><p>粉丝达标后可插入广告位实现收益。</p></div>
+<div class="fc"><div class="fi" style="background:#faf5ff;color:#8b5cf6"><i class="fas fa-users"></i></div><h3>社区生态</h3><p>关注创作者，打造互动社区。</p></div>
+<div class="fc"><div class="fi" style="background:#ecfdf5;color:#10b981"><i class="fas fa-clipboard"></i></div><h3>一键复制</h3><p>一键复制排版内容，直接粘贴到公众号。</p></div>
+</div>
+</div>
+</div>
+<div class="page" id="pg-editor">
+<div class="ep">
+<div class="es">
+<h3><i class="fas fa-palette"></i> 选择模板</h3>
+<div class="tm sel" onclick="aT('none')" data-t="none"><h4>📄 空白模板</h4><p>从零开始自由创作</p></div>
+<div id="eTL"><div class="ls"><div class="sp"></div></div></div>
+</div>
+<div class="emn">
+<div class="ett">
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<input type="text" class="fi2" id="aTitle" placeholder="输入文章标题..." style="width:260px;padding:7px 12px">
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-o btn-sm" onclick="rP()"><i class="fas fa-eye"></i> 预览</button>
+<button class="btn btn-o btn-sm" onclick="doCopy()"><i class="fas fa-copy"></i> 复制排版</button>
+<button class="btn btn-p btn-sm" onclick="sPM()"><i class="fas fa-upload"></i> 发布模板</button>
+</div>
+</div>
+<div class="ea">
+<div class="el"><div class="ec"><div id="quill-editor"></div></div></div>
+<div class="er">
+<div class="ph"><span><i class="fas fa-mobile-alt"></i> 手机预览</span><button class="btn btn-g btn-sm" onclick="rP()"><i class="fas fa-sync-alt"></i></button></div>
+<div class="pc" id="pC"><p style="color:#999;text-align:center;padding:40px 0">在左侧开始编辑<br>这里实时显示预览</p></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="page" id="pg-market">
+<div class="mp">
+<div class="mh"><h1>🎨 模板市场</h1><p>发现优秀创作者的精美模板</p></div>
+<div class="fb2">
+<button class="ft act" onclick="fT('全部',this)">全部</button>
+<button class="ft" onclick="fT('简约',this)">简约</button>
+<button class="ft" onclick="fT('科技',this)">科技</button>
+<button class="ft" onclick="fT('文艺',this)">文艺</button>
+<button class="ft" onclick="fT('商务',this)">商务</button>
+<button class="ft" onclick="fT('时尚',this)">时尚</button>
+<button class="ft" onclick="fT('美食',this)">美食</button>
+<button class="ft" onclick="fT('教育',this)">教育</button>
+<div class="sb"><i class="fas fa-search"></i><input type="text" id="sI" placeholder="搜索模板..." onkeyup="if(event.key==='Enter'){cP=1;gT()}"></div>
+</div>
+<div class="tabs">
+<button class="tabtn act" onclick="sS('latest',this)">最新</button>
+<button class="tabtn" onclick="sS('popular',this)">最受欢迎</button>
+<button class="tabtn" onclick="sS('most-used',this)">使用最多</button>
+</div>
+<div class="tg" id="tG"><div class="ls"><div class="sp"></div></div></div>
+<div style="text-align:center;margin:30px 0"><button class="btn btn-o" id="lmB" onclick="cP++;gT()" style="display:none"><i class="fas fa-plus"></i> 加载更多</button></div>
+</div>
+</div>
+<div class="page" id="pg-dash">
+<div class="dash">
+<div style="margin-bottom:30px"><h1>📊 工作台</h1><p style="color:var(--t2);margin-top:5px">欢迎回来，<span id="dU">用户</span></p></div>
+<div class="sgr">
+<div class="sc"><div class="si" style="background:#e8f8ee;color:#07c160"><i class="fas fa-users"></i></div><div class="sv" id="dF">0</div><div class="slb">粉丝数</div></div>
+<div class="sc"><div class="si" style="background:#f0f4ff;color:#4f46e5"><i class="fas fa-palette"></i></div><div class="sv" id="dT">0</div><div class="slb">我的模板</div></div>
+<div class="sc"><div class="si" style="background:#fef3f2;color:#fa5151"><i class="fas fa-heart"></i></div><div class="sv" id="dL">0</div><div class="slb">获得点赞</div></div>
+<div class="sc"><div class="si" style="background:#fff7ed;color:#f59e0b"><i class="fas fa-download"></i></div><div class="sv" id="dUs">0</div><div class="slb">被使用</div></div>
+<div class="sc"><div class="si" style="background:#ecfdf5;color:#10b981"><i class="fas fa-coins"></i></div><div class="sv" id="dR">¥0</div><div class="slb">广告收益</div></div>
+</div>
+<h2 style="margin-bottom:15px">我的模板</h2>
+<div class="tg" id="mTG"><div class="ls"><div class="sp"></div></div></div>
+</div>
+</div>
+<div class="page" id="pg-mytpl">
+<div class="mp">
+<div class="mh"><h1>📂 我的模板</h1><p>管理你创建和发布的所有模板</p></div>
+<div style="margin-bottom:20px"><button class="btn btn-p" onclick="nav('editor')"><i class="fas fa-plus"></i> 创建新模板</button></div>
+<div class="tg" id="uTG"><div class="ls"><div class="sp"></div></div></div>
+</div>
+</div>
+<div class="page" id="pg-prof">
+<div class="pp">
+<div class="pph">
+<div class="pav" id="pA">U</div>
+<h2 id="pN">用户名</h2>
+<p class="bio" id="pB">暂无简介</p>
+<div class="pst">
+<div class="psi"><div class="num" id="pFl">0</div><div class="lbl">粉丝</div></div>
+<div class="psi"><div class="num" id="pFg">0</div><div class="lbl">关注</div></div>
+<div class="psi"><div class="num" id="pTc">0</div><div class="lbl">模板</div></div>
+</div>
+<div style="margin-top:20px"><button class="btn btn-o btn-sm" onclick="sEP()"><i class="fas fa-edit"></i> 编辑资料</button></div>
+</div>
+</div>
+</div>
+<div class="page" id="pg-ads">
+<div class="am">
+<h1 style="margin-bottom:20px">💰 广告管理</h1>
+<div id="adC">
+<div class="au">
+<i class="fas fa-lock"></i>
+<h2>广告功能尚未解锁</h2>
+<p>当你的粉丝数达到 <strong id="adTh">1,000</strong> 时，即可开通</p>
+<div class="pb"><div class="pf" id="adPr" style="width:0%"></div></div>
+<p id="adPT" style="font-size:14px;color:var(--t2)">当前进度：0 / 1,000</p>
+</div>
+<div style="background:#fff;border-radius:var(--r);padding:25px;border:1px solid var(--bd)">
+<h3 style="margin-bottom:15px">📋 广告收益规则</h3>
+<div style="font-size:14px;color:var(--t2);line-height:2">
+<p>1️⃣ 粉丝数达到 1,000 后自动解锁</p>
+<p>2️⃣ 在模板中可插入广告位</p>
+<p>3️⃣ 其他用户使用你的模板时广告会展示</p>
+<p>4️⃣ 按展示和点击计算收益</p>
+<p>5️⃣ 收益每月结算，满100元可提现</p>
+</div>
+</div>
+</div>
+<div id="adUC" style="display:none">
+<div style="background:linear-gradient(135deg,#e8f8ee,#f0fff4);border-radius:var(--r);padding:25px;border:1px solid #b7ebc9;margin-bottom:20px">
+<h3 style="color:var(--p)">🎉 广告功能已解锁！</h3>
+<p style="color:var(--t2);font-size:14px">你可以在模板中插入广告位获取收益了</p>
+</div>
+</div>
+</div>
+</div>
+<div class="page" id="pg-uview">
+<div class="pp">
+<div class="pph">
+<div class="pav" id="vA">U</div>
+<h2 id="vN">用户名</h2>
+<p class="bio" id="vB">暂无简介</p>
+<div class="pst">
+<div class="psi"><div class="num" id="vFl">0</div><div class="lbl">粉丝</div></div>
+<div class="psi"><div class="num" id="vTc">0</div><div class="lbl">模板</div></div>
+</div>
+<div style="margin-top:20px"><button class="btn btn-p btn-sm" id="fBtn" onclick="tF()"><i class="fas fa-plus"></i> 关注</button></div>
+</div>
+<h3 style="margin:20px 0 15px">TA 的模板</h3>
+<div class="tg" id="vUT"></div>
+</div>
+</div>
+</div>
+<div class="mo" id="lM">
+<div class="modal">
+<div class="mx" onclick="hM('lM')"><i class="fas fa-times"></i></div>
+<h2>欢迎回来 👋</h2><p class="sub">登录你的账户</p>
+<form onsubmit="doLogin(event)">
+<div class="fg2"><label>邮箱</label><input type="email" class="fi2" id="lE" placeholder="your@email.com" required></div>
+<div class="fg2"><label>密码</label><input type="password" class="fi2" id="lP" placeholder="输入密码" required></div>
+<div class="em" id="lErr"></div>
+<button type="submit" class="fb" id="lBtn">登 录</button>
+</form>
+<p class="ff">没有账户？<a onclick="hM('lM');sM('rM')">立即注册</a></p>
+</div>
+</div>
+<div class="mo" id="rM">
+<div class="modal">
+<div class="mx" onclick="hM('rM')"><i class="fas fa-times"></i></div>
+<h2>创建账户 🚀</h2><p class="sub">注册即可免费使用</p>
+<form onsubmit="doReg(event)">
+<div class="fg2"><label>用户名</label><input type="text" class="fi2" id="rU" placeholder="你的用户名" required></div>
+<div class="fg2"><label>邮箱</label><input type="email" class="fi2" id="rE" placeholder="your@email.com" required></div>
+<div class="fg2"><label>密码</label><input type="password" class="fi2" id="rP2" placeholder="至少6位" required minlength="6"></div>
+<div class="em" id="rErr"></div>
+<button type="submit" class="fb" id="rBtn">注 册</button>
+</form>
+<p class="ff">已有账户？<a onclick="hM('rM');sM('lM')">去登录</a></p>
+</div>
+</div>
+<div class="mo" id="pubM">
+<div class="modal" style="max-width:600px">
+<div class="mx" onclick="hM('pubM')"><i class="fas fa-times"></i></div>
+<h2>发布模板 🎨</h2><p class="sub">分享你的排版设计</p>
+<form onsubmit="doPub(event)">
+<div class="fg2"><label>模板名称 *</label><input type="text" class="fi2" id="pubN" placeholder="给模板起个名字" required></div>
+<div class="fg2"><label>描述</label><textarea class="fi2" id="pubD" placeholder="模板的风格和适用场景"></textarea></div>
+<div class="fg2"><label>分类</label><select class="fi2" id="pubC"><option>简约</option><option>科技</option><option>文艺</option><option>商务</option><option>时尚</option><option>美食</option><option>教育</option><option>旅行</option><option>节日</option><option value="自定义">其他</option></select></div>
+<div class="fg2"><label>标签（逗号分隔）</label><input type="text" class="fi2" id="pubTg" placeholder="简约, 清新"></div>
+<div class="fg2"><label>是否公开</label><select class="fi2" id="pubPu"><option value="true">公开</option><option value="false">私有</option></select></div>
+<button type="submit" class="fb"><i class="fas fa-upload"></i> 发布</button>
+</form>
+</div>
+</div>
+<div class="mo" id="epM">
+<div class="modal">
+<div class="mx" onclick="hM('epM')"><i class="fas fa-times"></i></div>
+<h2>编辑资料 ✏️</h2>
+<form onsubmit="doEP(event)">
+<div class="fg2"><label>用户名</label><input type="text" class="fi2" id="epU" required></div>
+<div class="fg2"><label>个人简介</label><textarea class="fi2" id="epB" placeholder="介绍自己" maxlength="200"></textarea></div>
+<button type="submit" class="fb">保存修改</button>
+</form>
+</div>
+</div>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+let U=null,tk=localStorage.getItem('token'),AT=[],cP=1,cSo='latest',cCa='全部',cCSS='',vUID=null,Q=null;
+document.addEventListener('DOMContentLoaded',()=>{iQ();ck();lET();document.addEventListener('click',e=>{if(!e.target.closest('.uav')&&!e.target.closest('.um'))document.getElementById('uMenu').classList.remove('show')})});
+function iQ(){Q=new Quill('#quill-editor',{theme:'snow',placeholder:'开始编写你的公众号文章...',modules:{toolbar:[[{header:[1,2,3,false]}],['bold','italic','underline','strike'],[{color:[]},{background:[]}],[{align:[]}],[{list:'ordered'},{list:'bullet'}],['blockquote','code-block'],['link','image'],[{indent:'-1'},{indent:'+1'}],['clean']]}});Q.on('text-change',db(()=>rP(),300));Q.getModule('toolbar').addHandler('image',()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const g=Q.getSelection(true);Q.insertEmbed(g.index,'image',e.target.result)};r.readAsDataURL(f)};i.click()})}
+async function ck(){if(!tk){uAU(false);return}try{const r=await api('/api/auth/me');if(r.user){U=r.user;uAU(true)}else{tk=null;localStorage.removeItem('token');uAU(false)}}catch(e){tk=null;localStorage.removeItem('token');uAU(false)}}
+function uAU(l){document.getElementById('aBtn').style.display=l?'none':'flex';document.getElementById('uNav').style.display=l?'block':'none';document.querySelectorAll('.ao').forEach(el=>el.style.display=l?'':'none');if(l&&U)document.getElementById('uI').textContent=U.username[0].toUpperCase()}
+async function doLogin(e){e.preventDefault();const b=document.getElementById('lBtn');b.textContent='登录中...';b.disabled=true;try{const r=await api('/api/auth/login','POST',{email:document.getElementById('lE').value,password:document.getElementById('lP').value});if(r.error){sfe('lErr',r.error);b.textContent='登 录';b.disabled=false;return}tk=r.token;localStorage.setItem('token',tk);U=r.user;uAU(true);hM('lM');toast('登录成功！');document.getElementById('lE').value='';document.getElementById('lP').value=''}catch(ex){sfe('lErr','登录失败')}b.textContent='登 录';b.disabled=false}
+async function doReg(e){e.preventDefault();const b=document.getElementById('rBtn');b.textContent='注册中...';b.disabled=true;try{const r=await api('/api/auth/register','POST',{username:document.getElementById('rU').value,email:document.getElementById('rE').value,password:document.getElementById('rP2').value});if(r.error){sfe('rErr',r.error);b.textContent='注 册';b.disabled=false;return}tk=r.token;localStorage.setItem('token',tk);U=r.user;uAU(true);hM('rM');toast('注册成功！🎉')}catch(ex){sfe('rErr','注册失败')}b.textContent='注 册';b.disabled=false}
+function doLogout(){tk=null;U=null;localStorage.removeItem('token');uAU(false);nav('home');toast('已退出');document.getElementById('uMenu').classList.remove('show')}
+function nav(p,d){if(['dash','mytpl','prof','ads'].includes(p)&&!U){sM('lM');return}document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.nav-link').forEach(x=>x.classList.remove('active'));const el=document.getElementById('pg-'+p);if(el){el.classList.add('active');document.querySelector(`[data-p="${p}"]`)?.classList.add('active')}switch(p){case'market':cP=1;gT();break;case'dash':lD();break;case'mytpl':lMT();break;case'prof':lPr();break;case'ads':lAd();break;case'uview':vUP(d);break}window.scrollTo(0,0)}
+async function lET(){try{const r=await api('/api/templates/builtin');const c=document.getElementById('eTL');if(!r.templates||!r.templates.length){c.innerHTML='<p style="font-size:12px;color:#999">暂无</p>';return}c.innerHTML=r.templates.map(t=>'<div class="tm" onclick="aT(\''+t._id+'\')" data-t="'+t._id+'"><h4>'+t.name+'</h4><p>'+((t.description||'').substring(0,30))+'</p></div>').join('');AT=r.templates}catch(e){document.getElementById('eTL').innerHTML='<p style="color:#999;font-size:12px">加载失败</p>'}}
+function aT(id){document.querySelectorAll('.tm').forEach(el=>el.classList.remove('sel'));document.querySelector('[data-t="'+id+'"]')?.classList.add('sel');if(id==='none'){cCSS='';Q.root.innerHTML='<p>开始编写你的文章...</p>';rP();return}const t=AT.find(x=>x._id===id);if(!t)return;cCSS=t.cssContent||'';Q.root.innerHTML=t.htmlContent;rP();if(tk)api('/api/templates/'+id+'/use','POST').catch(()=>{});toast('已应用：'+t.name)}
+function rP(){document.getElementById('pC').innerHTML='<style>'+cCSS+'</style>'+Q.root.innerHTML}
+function doCopy(){const c=document.getElementById('pC');const tmp=document.createElement('div');tmp.innerHTML=c.innerHTML;tmp.style.cssText='position:fixed;left:-9999px';document.body.appendChild(tmp);const rng=document.createRange();rng.selectNodeContents(tmp);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(rng);document.execCommand('copy');sel.removeAllRanges();document.body.removeChild(tmp);toast('已复制！可粘贴到公众号编辑器 📋')}
+function sPM(){if(!U){sM('lM');return}sM('pubM')}
+async function doPub(e){e.preventDefault();const c=Q.root.innerHTML;if(!c||c==='<p><br></p>'){toast('请先编写内容','e');return}try{const r=await api('/api/templates','POST',{name:document.getElementById('pubN').value,description:document.getElementById('pubD').value,category:document.getElementById('pubC').value,tags:document.getElementById('pubTg').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean),isPublic:document.getElementById('pubPu').value==='true',htmlContent:c,cssContent:cCSS});if(r.error){toast(r.error,'e');return}hM('pubM');toast('发布成功！🎉');document.getElementById('pubN').value='';document.getElementById('pubD').value='';document.getElementById('pubTg').value=''}catch(ex){toast('发布失败','e')}}
+async function gT(){const g=document.getElementById('tG');if(cP===1)g.innerHTML='<div class="ls"><div class="sp"></div></div>';try{let u='/api/templates?page='+cP+'&limit=20&sort='+cSo;if(cCa!=='全部')u+='&category='+cCa;const s=document.getElementById('sI')?.value;if(s)u+='&search='+encodeURIComponent(s);const r=await api(u);if(cP===1)g.innerHTML='';if(!r.templates||!r.templates.length){if(cP===1)g.innerHTML='<div class="ey" style="grid-column:1/-1"><i class="fas fa-inbox"></i><h3>暂无模板</h3><p>快来创建第一个吧！</p></div>';document.getElementById('lmB').style.display='none';return}r.templates.forEach(t=>g.insertAdjacentHTML('beforeend',cCard(t)));document.getElementById('lmB').style.display=cP<r.pages?'':'none'}catch(ex){g.innerHTML='<p style="text-align:center;color:#999;grid-column:1/-1">加载失败</p>'}}
+function cCard(t){const a=t.author?.username||'匿名';return '<div class="tc"><div class="tpi"><div class="pin"><style>'+(t.cssContent||'').replace(/</g,'&lt;')+'</style>'+t.htmlContent.substring(0,500)+'</div></div><div class="tinf"><span class="tcat">'+(t.category||'自定义')+'</span><h3>'+esc(t.name)+'</h3><p class="desc">'+esc(t.description||'暂无描述')+'</p><div class="tmet"><div class="ta" onclick="nav(\'uview\',\''+( t.author?._id||'')+'\')"><div class="taa">'+a[0].toUpperCase()+'</div><span>'+esc(a)+'</span></div><div class="ts"><span onclick="doLike(\''+t._id+'\',this)" style="cursor:pointer"><i class="fas fa-heart" style="color:'+(t.likedBy?.includes(U?.id)?'var(--a)':'#ccc')+'"></i> '+(t.likes||0)+'</span><span><i class="fas fa-download"></i> '+(t.usageCount||0)+'</span></div></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-p btn-sm" style="flex:1" onclick="doUse(\''+t._id+'\')"><i class="fas fa-check"></i> 使用</button></div></div></div>'}
+function fT(c,el){cCa=c;cP=1;document.querySelectorAll('.ft').forEach(t=>t.classList.remove('act'));el.classList.add('act');gT()}
+function sS(s,el){cSo=s;cP=1;document.querySelectorAll('.tabtn').forEach(t=>t.classList.remove('act'));el.classList.add('act');gT()}
+async function doUse(id){try{const r=await api('/api/templates/'+id);if(!r.template){toast('模板不存在','e');return}cCSS=r.template.cssContent||'';AT.push(r.template);nav('editor');setTimeout(()=>{Q.root.innerHTML=r.template.htmlContent;rP();toast('已加载：'+r.template.name)},100);if(tk)api('/api/templates/'+id+'/use','POST').catch(()=>{})}catch(ex){toast('加载失败','e')}}
+async function doLike(id,el){if(!U){sM('lM');return}try{const r=await api('/api/templates/'+id+'/like','POST');if(r.likes!==undefined)el.innerHTML='<i class="fas fa-heart" style="color:'+(r.isLiked?'var(--a)':'#ccc')+'"></i> '+r.likes}catch(ex){toast('操作失败','e')}}
+async function lD(){if(!U)return;document.getElementById('dU').textContent=U.username;try{const s=await api('/api/stats');document.getElementById('dF').textContent=s.followersCount||0;document.getElementById('dT').textContent=s.templatesCount||0;document.getElementById('dL').textContent=s.totalLikes||0;document.getElementById('dUs').textContent=s.totalUses||0;document.getElementById('dR').textContent='¥'+(s.adRevenue||0).toFixed(2);const t=await api('/api/templates?mine=true&limit=10');const g=document.getElementById('mTG');if(!t.templates||!t.templates.length)g.innerHTML='<div class="ey" style="grid-column:1/-1"><i class="fas fa-palette"></i><h3>还没有模板</h3><button class="btn btn-p" style="margin-top:15px" onclick="nav(\'editor\')">创建模板</button></div>';else g.innerHTML=t.templates.map(x=>cCard(x)).join('')}catch(ex){toast('加载失败','e')}}
+async function lMT(){const g=document.getElementById('uTG');g.innerHTML='<div class="ls"><div class="sp"></div></div>';try{const r=await api('/api/templates?mine=true&limit=50');if(!r.templates||!r.templates.length)g.innerHTML='<div class="ey" style="grid-column:1/-1"><i class="fas fa-palette"></i><h3>还没有模板</h3></div>';else g.innerHTML=r.templates.map(t=>'<div class="tc"><div class="tpi"><div class="pin"><style>'+(t.cssContent||'')+'</style>'+t.htmlContent.substring(0,500)+'</div></div><div class="tinf"><span class="tcat">'+t.category+'</span><h3>'+esc(t.name)+'</h3><div class="ts" style="margin:8px 0"><span><i class="fas fa-heart"></i> '+(t.likes||0)+'</span><span><i class="fas fa-download"></i> '+(t.usageCount||0)+'</span><span>'+(t.isPublic?'🌐 公开':'🔒 私有')+'</span></div><div style="display:flex;gap:8px"><button class="btn btn-o btn-sm" style="flex:1" onclick="doUse(\''+t._id+'\')"><i class="fas fa-edit"></i> 编辑</button><button class="btn btn-d btn-sm" onclick="doD(\''+t._id+'\')"><i class="fas fa-trash"></i></button></div></div></div>').join('')}catch(ex){g.innerHTML='<p style="text-align:center;color:#999">加载失败</p>'}}
+async function doD(id){if(!confirm('确定删除？'))return;try{await api('/api/templates/'+id,'DELETE');toast('已删除');lMT()}catch(ex){toast('删除失败','e')}}
+function lPr(){if(!U)return;document.getElementById('pA').textContent=U.username[0].toUpperCase();document.getElementById('pN').textContent=U.username;document.getElementById('pB').textContent=U.bio||'暂无简介';document.getElementById('pFl').textContent=U.followersCount||0;document.getElementById('pFg').textContent=U.followingCount||0;document.getElementById('pTc').textContent=U.templatesCount||0}
+function sEP(){document.getElementById('epU').value=U.username;document.getElementById('epB').value=U.bio||'';sM('epM')}
+async function doEP(e){e.preventDefault();try{const r=await api('/api/auth/profile','PUT',{username:document.getElementById('epU').value,bio:document.getElementById('epB').value});if(r.user){U=r.user;uAU(true);lPr();hM('epM');toast('已更新')}}catch(ex){toast('更新失败','e')}}
+async function vUP(uid){if(!uid)return;vUID=uid;try{const r=await api('/api/users/'+uid);if(!r.user){toast('用户不存在','e');return}const u=r.user;document.getElementById('vA').textContent=u.username[0].toUpperCase();document.getElementById('vN').textContent=u.username;document.getElementById('vB').textContent=u.bio||'暂无简介';document.getElementById('vFl').textContent=u.followersCount||0;document.getElementById('vTc').textContent=u.templatesCount||0;const fb=document.getElementById('fBtn');if(U&&U.id===uid)fb.style.display='none';else{fb.style.display='';fb.innerHTML=r.isFollowing?'<i class="fas fa-check"></i> 已关注':'<i class="fas fa-plus"></i> 关注';fb.className=r.isFollowing?'btn btn-o btn-sm':'btn btn-p btn-sm'}const g=document.getElementById('vUT');g.innerHTML=r.templates&&r.templates.length?r.templates.map(t=>cCard({...t,author:u})).join(''):'<div class="ey" style="grid-column:1/-1"><i class="fas fa-palette"></i><h3>暂无公开模板</h3></div>';document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('pg-uview').classList.add('active')}catch(ex){toast('加载失败','e')}}
+async function tF(){if(!U){sM('lM');return}if(!vUID)return;try{const r=await api('/api/users/'+vUID+'/follow','POST');const b=document.getElementById('fBtn');b.innerHTML=r.isFollowing?'<i class="fas fa-check"></i> 已关注':'<i class="fas fa-plus"></i> 关注';b.className=r.isFollowing?'btn btn-o btn-sm':'btn btn-p btn-sm';const c=document.getElementById('vFl');c.textContent=r.isFollowing?parseInt(c.textContent)+1:Math.max(0,parseInt(c.textContent)-1);toast(r.isFollowing?'关注成功':'已取消关注')}catch(ex){toast('操作失败','e')}}
+async function lAd(){if(!U)return;try{const s=await api('/api/stats');const th=s.adThreshold||1000;const f=s.followersCount||0;const p=Math.min(100,(f/th)*100);if(s.canShowAds){document.getElementById('adC').style.display='none';document.getElementById('adUC').style.display='block'}else{document.getElementById('adC').style.display='block';document.getElementById('adUC').style.display='none';document.getElementById('adTh').textContent=th.toLocaleString();document.getElementById('adPr').style.width=p+'%';document.getElementById('adPT').textContent='当前进度：'+f.toLocaleString()+' / '+th.toLocaleString()}}catch(ex){toast('加载失败','e')}}
+async function api(u,m='GET',b=null){const o={method:m,headers:{'Content-Type':'application/json'}};if(tk)o.headers['Authorization']='Bearer '+tk;if(b)o.body=JSON.stringify(b);return(await fetch(u,o)).json()}
+function sM(id){document.getElementById(id).classList.add('show')}
+function hM(id){document.getElementById(id).classList.remove('show');document.querySelectorAll('.em').forEach(el=>el.style.display='none')}
+function tUM(){document.getElementById('uMenu').classList.toggle('show')}
+function tMM(){const l=document.getElementById('navLinks');if(l.style.display==='flex')l.style.display='none';else l.style.cssText='display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;background:#fff;padding:15px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:999'}
+function sfe(id,m){const el=document.getElementById(id);el.textContent=m;el.style.display='block';setTimeout(()=>el.style.display='none',5000)}
+function toast(m,t){const c=document.getElementById('tC');const el=document.createElement('div');el.className='toast'+(t==='e'?' err':'');el.innerHTML='<i class="fas fa-'+(t==='e'?'exclamation-circle':'check-circle')+'"></i><span>'+m+'</span>';c.appendChild(el);setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},3000)}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function db(fn,d){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),d)}}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show')}));
+</script>
+</body>
+</html>
