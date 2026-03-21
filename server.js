@@ -2,7 +2,7 @@ require('dotenv').config();
 const express=require('express'),mongoose=require('mongoose'),bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),multer=require('multer'),path=require('path'),cors=require('cors'),compression=require('compression'),helmet=require('helmet'),rateLimit=require('express-rate-limit'),fs=require('fs');
 const app=express();
 app.use(compression());app.use(helmet({contentSecurityPolicy:false,crossOriginEmbedderPolicy:false}));app.use(cors());app.use(express.json({limit:'50mb'}));app.use(express.urlencoded({extended:true,limit:'50mb'}));app.use(express.static('public'));app.use('/uploads',express.static('uploads'));
-app.use('/api/',rateLimit({windowMs:15*60*1000,max:200}));
+app.use('/api/',rateLimit({windowMs:15*60*1000,max:300}));
 if(!fs.existsSync('uploads'))fs.mkdirSync('uploads');
 const storage=multer.diskStorage({destination:(r,f,cb)=>cb(null,'uploads/'),filename:(r,f,cb)=>cb(null,Date.now()+'-'+Math.round(Math.random()*1E9)+path.extname(f.originalname))});
 const upload=multer({storage,limits:{fileSize:10*1024*1024},fileFilter:(r,f,cb)=>{const t=/jpeg|jpg|png|gif|webp|svg/;cb(null,t.test(path.extname(f.originalname).toLowerCase())&&t.test(f.mimetype))}});
@@ -51,31 +51,41 @@ app.get('/api/users/:id',optAuth,async(req,res)=>{try{const user=await User.find
 
 app.get('/api/stats',auth,async(req,res)=>{try{const user=await User.findById(req.userId);const templates=await Template.find({author:req.userId});res.json({followersCount:user.followersCount,followingCount:user.followingCount,templatesCount:templates.length,totalLikes:templates.reduce((s,t)=>s+t.likes,0),totalUses:templates.reduce((s,t)=>s+t.usageCount,0),canShowAds:user.canShowAds,adRevenue:user.adRevenue,adThreshold:parseInt(process.env.AD_FOLLOWER_THRESHOLD||1000)})}catch(e){res.status(500).json({error:'获取失败'})}});
 
-// ==================== AI 智能写作 API ====================
-app.post('/api/ai/generate',auth,async(req,res)=>{
-try{
+// ==================== AI 智能写作 ====================
+app.post('/api/ai/generate',auth,async(req,res)=>{try{
 const{prompt,type}=req.body;
-const aiKey=process.env.AI_API_KEY;
-const aiUrl=process.env.AI_API_URL||'https://api.deepseek.com/v1/chat/completions';
-const aiModel=process.env.AI_MODEL||'deepseek-chat';
-if(!aiKey)return res.status(400).json({error:'AI功能未配置，请在环境变量中设置 AI_API_KEY'});
+const apiKey=process.env.AI_API_KEY;
+const apiUrl=process.env.AI_API_URL||'https://api.deepseek.com/v1/chat/completions';
+const model=process.env.AI_MODEL||'deepseek-chat';
+if(!apiKey)return res.status(400).json({error:'AI功能未配置，请联系管理员添加 AI_API_KEY'});
 if(!prompt)return res.status(400).json({error:'请输入内容'});
-const sysMsgs={
-write:'你是一个专业的微信公众号文案写作专家。根据用户主题写一篇公众号文章。要求：1.语言生动有趣 2.结构清晰有标题和小标题 3.适合公众号阅读 4.字数800-1500字。用HTML格式输出：h1大标题、h2小标题、p段落、blockquote引用、strong加粗关键词。不要输出```html标记。',
-polish:'你是一个文字润色专家。优化用户提供的文字使其更流畅优美有感染力。保持原意不变，用HTML格式输出，不要输出```html标记。直接输出润色后的内容。',
-title:'你是一个公众号标题专家。根据内容生成5个吸引人的标题，每个标题一行，前面加序号和emoji。要求：吸引眼球、引发好奇、适合公众号。',
-expand:'你是一个内容扩展专家。将用户提供的简短内容扩展成详细丰富的段落，添加细节描述和生动的例子。用HTML的p标签输出，不要输出```html标记。',
-summary:'你是一个内容总结专家。用3-5个要点总结用户提供的内容，每个要点用一个p标签，前面加emoji编号。不要输出```html标记。',
-layout:'你是一个公众号排版专家。将用户提供的纯文本转换为精美的公众号排版HTML。要求：1.用h1做大标题 2.用h2做小标题 3.合理分段用p标签 4.重要内容用blockquote 5.关键词用strong加粗 6.添加合适的段落间emoji装饰。不要输出```html标记，直接输出HTML内容。',
-style:'你是一个文案改写专家。按照用户指定的风格改写内容。保持核心信息不变，调整语气和表达方式。用HTML格式输出，不要输出```html标记。'
+
+const prompts={
+  'write':'你是一个专业的公众号文案写作专家。请根据用户给的主题，写一篇高质量的公众号文章。要求：1.标题吸引人 2.内容有深度 3.排版用HTML标签（h1,h2,p,blockquote等）4.字数800-1500字 5.包含小标题分段 6.结尾有总结。直接输出HTML格式的文章内容，不要输出markdown。',
+  'polish':'你是一个专业的文案润色专家。请优化以下文字，使其更加流畅、专业、有感染力。保持原意不变，输出优化后的纯文本。',
+  'expand':'你是一个专业的内容扩展专家。请将以下内容扩展为更详细、更丰富的段落。增加例子、数据或细节描述。输出扩展后的纯文本。',
+  'title':'你是一个爆款标题专家。请根据以下内容，生成5个吸引人的公众号标题。每个标题一行，用数字编号。标题要有吸引力，激发好奇心。',
+  'summary':'你是一个内容摘要专家。请将以下内容总结为3-5句话的精华摘要。',
+  'outline':'你是一个内容策划专家。请根据以下主题，生成一个详细的文章大纲。包含主标题和3-5个小标题，每个小标题下有2-3个要点。',
+  'rewrite':'你是一个文案改写专家。请用不同的表达方式重写以下内容，保持原意但换一种风格。输出改写后的纯文本。',
+  'slogan':'你是一个广告文案专家。请根据以下内容，生成5条简短有力的宣传语/金句。每条一行。'
 };
-const resp=await fetch(aiUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+aiKey},body:JSON.stringify({model:aiModel,messages:[{role:'system',content:sysMsgs[type]||sysMsgs.write},{role:'user',content:prompt}],max_tokens:3000,temperature:0.7})});
-const data=await resp.json();
-const content=data.choices?.[0]?.message?.content;
-if(!content)return res.status(500).json({error:'AI返回为空，请重试。错误信息：'+JSON.stringify(data)});
-res.json({content});
-}catch(e){res.status(500).json({error:'AI生成失败: '+e.message})}
+
+const systemPrompt=prompts[type]||prompts['write'];
+
+const response=await fetch(apiUrl,{
+  method:'POST',
+  headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+  body:JSON.stringify({model,messages:[{role:'system',content:systemPrompt},{role:'user',content:prompt}],max_tokens:3000,temperature:0.7})
 });
+
+if(!response.ok){const err=await response.text();return res.status(500).json({error:'AI服务调用失败：'+response.status})}
+const data=await response.json();
+const content=data.choices?.[0]?.message?.content||'生成失败，请重试';
+res.json({content});
+}catch(e){res.status(500).json({error:'AI生成失败：'+e.message})}});
+
+app.get('/api/ai/status',(req,res)=>{res.json({enabled:!!process.env.AI_API_KEY})});
 
 // ==================== 内置模板 ====================
 async function seedBuiltinTemplates(){if(await Template.countDocuments({isBuiltin:true})>0)return;let admin=await User.findOne({username:'system'});if(!admin){admin=new User({username:'system',email:'system@editor.com',password:await bcrypt.hash('system_admin_2024',12),role:'admin'});await admin.save()}
