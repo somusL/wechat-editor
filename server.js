@@ -51,6 +51,33 @@ app.get('/api/users/:id',optAuth,async(req,res)=>{try{const user=await User.find
 
 app.get('/api/stats',auth,async(req,res)=>{try{const user=await User.findById(req.userId);const templates=await Template.find({author:req.userId});res.json({followersCount:user.followersCount,followingCount:user.followingCount,templatesCount:templates.length,totalLikes:templates.reduce((s,t)=>s+t.likes,0),totalUses:templates.reduce((s,t)=>s+t.usageCount,0),canShowAds:user.canShowAds,adRevenue:user.adRevenue,adThreshold:parseInt(process.env.AD_FOLLOWER_THRESHOLD||1000)})}catch(e){res.status(500).json({error:'获取失败'})}});
 
+// ==================== AI 智能写作 API ====================
+app.post('/api/ai/generate',auth,async(req,res)=>{
+try{
+const{prompt,type}=req.body;
+const aiKey=process.env.AI_API_KEY;
+const aiUrl=process.env.AI_API_URL||'https://api.deepseek.com/v1/chat/completions';
+const aiModel=process.env.AI_MODEL||'deepseek-chat';
+if(!aiKey)return res.status(400).json({error:'AI功能未配置，请在环境变量中设置 AI_API_KEY'});
+if(!prompt)return res.status(400).json({error:'请输入内容'});
+const sysMsgs={
+write:'你是一个专业的微信公众号文案写作专家。根据用户主题写一篇公众号文章。要求：1.语言生动有趣 2.结构清晰有标题和小标题 3.适合公众号阅读 4.字数800-1500字。用HTML格式输出：h1大标题、h2小标题、p段落、blockquote引用、strong加粗关键词。不要输出```html标记。',
+polish:'你是一个文字润色专家。优化用户提供的文字使其更流畅优美有感染力。保持原意不变，用HTML格式输出，不要输出```html标记。直接输出润色后的内容。',
+title:'你是一个公众号标题专家。根据内容生成5个吸引人的标题，每个标题一行，前面加序号和emoji。要求：吸引眼球、引发好奇、适合公众号。',
+expand:'你是一个内容扩展专家。将用户提供的简短内容扩展成详细丰富的段落，添加细节描述和生动的例子。用HTML的p标签输出，不要输出```html标记。',
+summary:'你是一个内容总结专家。用3-5个要点总结用户提供的内容，每个要点用一个p标签，前面加emoji编号。不要输出```html标记。',
+layout:'你是一个公众号排版专家。将用户提供的纯文本转换为精美的公众号排版HTML。要求：1.用h1做大标题 2.用h2做小标题 3.合理分段用p标签 4.重要内容用blockquote 5.关键词用strong加粗 6.添加合适的段落间emoji装饰。不要输出```html标记，直接输出HTML内容。',
+style:'你是一个文案改写专家。按照用户指定的风格改写内容。保持核心信息不变，调整语气和表达方式。用HTML格式输出，不要输出```html标记。'
+};
+const resp=await fetch(aiUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+aiKey},body:JSON.stringify({model:aiModel,messages:[{role:'system',content:sysMsgs[type]||sysMsgs.write},{role:'user',content:prompt}],max_tokens:3000,temperature:0.7})});
+const data=await resp.json();
+const content=data.choices?.[0]?.message?.content;
+if(!content)return res.status(500).json({error:'AI返回为空，请重试。错误信息：'+JSON.stringify(data)});
+res.json({content});
+}catch(e){res.status(500).json({error:'AI生成失败: '+e.message})}
+});
+
+// ==================== 内置模板 ====================
 async function seedBuiltinTemplates(){if(await Template.countDocuments({isBuiltin:true})>0)return;let admin=await User.findOne({username:'system'});if(!admin){admin=new User({username:'system',email:'system@editor.com',password:await bcrypt.hash('system_admin_2024',12),role:'admin'});await admin.save()}
 const tpls=[
 {name:'清新简约',description:'干净清爽，适合日常推文',category:'简约',tags:['简约','清新'],cssContent:`.tpl-body{font-family:'PingFang SC',sans-serif;color:#3e3e3e;line-height:2;padding:20px;background:#fff}.tpl-body h1{font-size:22px;color:#2c3e50;text-align:center;margin:30px 0 20px;font-weight:700;letter-spacing:2px}.tpl-body h2{font-size:18px;color:#1a8f6e;border-left:4px solid #1a8f6e;padding-left:12px;margin:25px 0 15px}.tpl-body p{font-size:15px;margin:12px 0;text-align:justify}.tpl-body blockquote{background:#f7f9fa;border-left:4px solid #1a8f6e;padding:15px 20px;margin:20px 0;border-radius:0 8px 8px 0;font-size:14px;color:#666}.tpl-body .highlight{background:linear-gradient(to bottom,transparent 60%,#a8edca 60%);padding:0 2px}.tpl-body .end-mark{text-align:center;color:#1a8f6e;font-size:20px;margin:30px 0 10px;letter-spacing:5px}`,htmlContent:`<div class="tpl-body"><h1>在这里输入标题</h1><p style="text-align:center;color:#1a8f6e;letter-spacing:10px;font-size:12px">● ● ●</p><p>在这里开始写文章。这是一个<span class="highlight">清新简约</span>风格的模板。</p><h2>小标题一</h2><p>简洁大方的排版让读者更舒适地阅读。</p><blockquote>这里是引用文字，可以强调重要观点。</blockquote><h2>小标题二</h2><p>继续添加你的精彩内容。</p><p class="end-mark">— END —</p></div>`},
